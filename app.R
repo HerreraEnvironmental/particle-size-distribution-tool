@@ -7,6 +7,21 @@
 #    http://shiny.rstudio.com/
 #
 
+#add CSS libraries from herrera website
+css_block<-'https://www.herrerainc.com/wp-includes/css/dist/block-library/style.min.css'
+css_theme_classic<-'https://www.herrerainc.com/wp-includes/css/classic-themes.min.css'
+css_mapmarker<-'https://www.herrerainc.com/wp-content/plugins/maps-marker-pro/css/mapsmarkerpro.css' 
+css_understrap<-'https://www.herrerainc.com/wp-content/themes/herrerainc/css/theme.min.css' 
+css_understrap_override<-'https://www.herrerainc.com/wp-content/themes/herrerainc/css/theme-overrides.css'
+
+# download.file(css_block,paste0('www/','style.min.css'))
+# download.file(css_theme_classic,paste0('www/','classic-themes.min.css'))
+# download.file(css_mapmarker,paste0('www/','mapsmarkerpro.css'))
+# download.file(css_understrap,paste0('www/','theme.min.css'))
+# download.file(css_understrap_override,paste0('www/','theme-overrides.css'))
+# 
+
+
 library(shiny)
 library(signal)
 library(dplyr)
@@ -25,22 +40,58 @@ sieve_lookup<-read.csv('sieve_lookup.csv')
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.min.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "classic-themes.min.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "mapsmarkerpro.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "theme.min.css"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "theme-overrides.css")
+  ),
     # Application title
-    titlePanel("Particle Size Distribution Tool"),
+  includeHTML('herrera_navbar.Rhtml'),
 
-    # Sidebar with a slider input for number of bins 
-
+  tags$div(class='wrapper',id='single-wrapper',
+           HTML('
+             <div class="container-fluid" id="page-wrapper">
+             <div class="bg-new-blue std-head">
+             <h2 class="px-md-5 text-white">
+             </h2><h2 class="page-title text-white">Particle Size Distribution Tool</h2>                  
+             </div>
+             </div>
+'),
+   # h2("Particle Size Distribution Tool"),
+    sidebarLayout(
+      sidebarPanel(
+        h5('Input Particle Data'),
           rHandsontableOutput('hot'),
-      
-    tableOutput("sieveMeshTable"),
-    fluidRow(column(4,tableOutput("distrib")),
-             column(4,tableOutput("coeffs"))),
-    plotOutput('plot',
-               width='600px')
-
-    
+          width = 4
+      ),
+    mainPanel(
+      h5('Output'),
+        tabsetPanel(
+            tabPanel(strong('Sieve Mesh Table'),
+              tableOutput("sieveMeshTable")
+              ),
+            tabPanel(strong('Analysis'),
+            fluidRow(column(4,
+                            h5('Particle Percentiles'),
+                            tableOutput("distrib")),
+                     column(1),
+                     column(4,
+                            h5('Analytical Coefficients'),
+                            tableOutput("coeffs")))
+            ),
+            tabPanel(strong('Plot Out'),
+            plotOutput('plot',
+                       width='600px')
+            )
+    ),
+    width=8)
+    )
+),
+includeHTML('herrera_footer.Rhtml')
 )
+
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
