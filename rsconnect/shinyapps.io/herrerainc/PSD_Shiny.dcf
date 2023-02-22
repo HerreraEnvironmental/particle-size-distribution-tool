@@ -5,16 +5,9 @@ account: herrerainc
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8000595
-<<<<<<< HEAD
-bundleId: 6820688
+bundleId: 6876428
 url: https://herrerainc.shinyapps.io/PSD_Shiny/
-when: 1675799659.15809
-lastSyncTime: 1675799659.1581
-=======
-bundleId: 6820507
-url: https://herrerainc.shinyapps.io/PSD_Shiny/
-when: 1675796283.61124
-lastSyncTime: 1675796283.61125
->>>>>>> 6c0ca1fc7b2fad010c9f401634f4f217cb5f5f38
+when: 1677102375.82602
+lastSyncTime: 1677102375.82603
 asMultiple: FALSE
 asStatic: FALSE

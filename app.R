@@ -5,29 +5,19 @@
 # Find out more about building applications with Shiny here:
 #
 #    http://shiny.rstudio.com/
-#
-
-#add CSS libraries from herrera website
-css_block<-'https://www.herrerainc.com/wp-includes/css/dist/block-library/style.min.css'
-css_theme_classic<-'https://www.herrerainc.com/wp-includes/css/classic-themes.min.css'
-css_mapmarker<-'https://www.herrerainc.com/wp-content/plugins/maps-marker-pro/css/mapsmarkerpro.css' 
-css_understrap<-'https://www.herrerainc.com/wp-content/themes/herrerainc/css/theme.min.css' 
-css_understrap_override<-'https://www.herrerainc.com/wp-content/themes/herrerainc/css/theme-overrides.css'
-
-# download.file(css_block,paste0('www/','style.min.css'))
-# download.file(css_theme_classic,paste0('www/','classic-themes.min.css'))
-# download.file(css_mapmarker,paste0('www/','mapsmarkerpro.css'))
-# download.file(css_understrap,paste0('www/','theme.min.css'))
-# download.file(css_understrap_override,paste0('www/','theme-overrides.css'))
-# 
 
 
 library(shiny)
+#add required packages below
+###
 library(signal)
 library(dplyr)
 library(rhandsontable)
 library(ggplot2)
+###
 
+#add any app specific data prep or settings, functions
+###
 initial_table<-
   tibble(`Screen Size (µm)`=c(500,125,63,4,1)	,
          `Mass Caught (mg)`=c(11,12,12.7,26.8,6)
@@ -35,86 +25,101 @@ initial_table<-
 percent <- function(x, digits = 2, format = "f", ...) {
   paste0(formatC(100 * x, format = format, digits = digits, ...), "%")
 }
-
-sieve_lookup<-read.csv('sieve_lookup.csv')
+sieve_lookup<-read.csv('app_files/sieve_lookup.csv')
+###
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
-  tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "style.min.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "classic-themes.min.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "mapsmarkerpro.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "theme.min.css"),
-    tags$link(rel = "stylesheet", type = "text/css", href = "theme-overrides.css")
-  ),
-    # Application title
-  includeHTML('herrera_navbar.Rhtml'),
-
-  tags$div(class='wrapper',id='single-wrapper',
-           HTML('
-             <div class="container-fluid" id="page-wrapper">
+APP_TITLE<-'Particle Size Distribution Tool'
+#Define UI
+ui<-fluidPage(
+  #   HTML(paste0('<body class="post-template-default single single-post postid-9227 single-format-standard',
+  #   'wp-custom-logo fl-builder group-blog single-projects single-stormwater single-sustainability',
+  #   'single-uncategorized single-washington single-water-quality fl-builder-breakpoint-large">')),
+  #   #header file for CSS and analytics
+  includeHTML('HTML_Helpers/herrera_head.html'),#note that I had to delete the JS scripts and Google analytics
+  #   #herrera nav bar
+  includeHTML('HTML_Helpers/herrera_navbar.Rhtml'),
+  #   #INSERT APPLICATION TITLE
+  HTML(paste0('
              <div class="bg-new-blue std-head">
-             <h2 class="px-md-5 text-white">
-             </h2><h2 class="page-title text-white">Particle Size Distribution Tool</h2>                  
+             <h2 class="px-md-5 text-white"></h2>
+             <h2 class="page-title text-white">',APP_TITLE,'</h2>
              </div>
-             </div>
-'),
-   # h2("Particle Size Distribution Tool"),
-    sidebarLayout(
-      sidebarPanel(
+             <div class="container" id="content" tabindex="-1">
+             <div class="row justify-content-center">
+')),
+  ###APP UI STARTS HERE
+  fluidRow(tags$p(paste0("Particle size distribution indicates the percentage of particles of a certain size ",
+                         "(or in a certain size interval). These intervals are also called size classes or fractions. ",
+                         "This tool allows the user to enter the mass caught with each screen size, and it provides ",
+                         "the associated ASTM US Standard mesh size, interpolated quantiles (10th, 25th, 30th, ",
+                         "50th, 60th, 75th, 84th, and 90th percentiles), and coefficients of uniformity and curve. ",
+                         "The tool also outputs a chart showing the percent passing with particle size on the ","
+                         x-axis."
+                         ))
+  ),
+  fluidRow(
+   # sidebarLayout(
+     # sidebarPanel(
+      column(
         h5('Input Particle Data'),
-          rHandsontableOutput('hot'),
-          width = 4
+        tags$p("Provide the mass caught by each screen size below"),
+        rHandsontableOutput('hot',width="100%"),
+        width = 5
       ),
-    mainPanel(
-      h5('Output'),
+      #mainPanel(
+      column(
+        h5('Output'),
         tabsetPanel(
-            tabPanel(strong('Sieve Mesh Table'),
-              tableOutput("sieveMeshTable")
-              ),
-            tabPanel(strong('Analysis'),
-            fluidRow(column(4,
-                            h5('Particle Percentiles'),
-                            tableOutput("distrib")),
-                     column(1),
-                     column(4,
-                            h5('Analytical Coefficients'),
-                            tableOutput("coeffs")))
-            ),
-            tabPanel(strong('Plot Out'),
-            plotOutput('plot',
-                       width='600px')
-            )
-    ),
-    width=8)
-    )
-),
-includeHTML('herrera_footer.Rhtml')
+          tabPanel(strong('Sieve Mesh Table'),
+                   tableOutput("sieveMeshTable")
+          ),
+          tabPanel(strong('Analysis'),
+                   fluidRow(column(5,
+                                   h5('Particle Percentiles'),
+                                   tableOutput("distrib")),
+                            column(1),
+                            column(5,
+                                   h5('Analytical Coefficients'),
+                                   tableOutput("coeffs")))
+          ),
+          tabPanel(strong('Plot Out'),
+                   plotOutput('plot',
+                              width='600px')
+          )
+        ),
+        width=7)
+   # )
+  ),
+  HTML('</div></div></div>
+       </body>'),
+  includeHTML('HTML_Helpers/herrera_footer.Rhtml')
 )
 
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
+  
   df <- reactive({
     hot <- input$hot
     if (!is.null(hot)) hot_to_r(hot)
   })
   
   output$hot <- renderRHandsontable({
-    rhandsontable(initial_table)
+    rhandsontable(initial_table,
+                  width=600)
   })
   #2. Spreadsheet plots the seive analysis
   sieveMesh<-reactive({
     sieve_mesh<-left_join(df(),sieve_lookup,by=c(`Screen Size (µm)`='Microns')) %>% pull(Mesh)
     df() %>%
-    transmute(
-      `Screen Size (µm)`,
-      `ASTM US Std Mesh`=sieve_mesh,
-      `% Retained` = `Mass Caught (mg)`/sum(`Mass Caught (mg)`),
-      `Mass Passing (mg)`=sum(`Mass Caught (mg)`)-cumsum(`Mass Caught (mg)`),
-      `% Passing`=`Mass Passing (mg)`/sum(`Mass Caught (mg)`)
-    )
+      transmute(
+        `Screen Size (µm)`,
+        `ASTM US Std Mesh`=sieve_mesh,
+        `% Retained` = `Mass Caught (mg)`/sum(`Mass Caught (mg)`),
+        `Mass Passing (mg)`=sum(`Mass Caught (mg)`)-cumsum(`Mass Caught (mg)`),
+        `% Passing`=`Mass Passing (mg)`/sum(`Mass Caught (mg)`)
+      )
   })
   
   output$sieveMeshTable<-renderTable({
@@ -126,22 +131,22 @@ server <- function(input, output) {
       select(-`Screen Size (µm)`)
   })
   #3. Interpolate D25, D50, D75, D84, and D90
-
+  
   output$distrib<-renderTable({
     interp_out<-
       sieveMesh() %>%
       arrange(`% Passing`) %>%
       with(.,signal::interp1(x=`% Passing`,
-                                y=log(`Screen Size (µm)`),
-                                 xi=c(.1,.25,.3,.5,.6,.75,.87,.9),
-                                )) %>%
+                             y=log(`Screen Size (µm)`),
+                             xi=c(.1,.25,.3,.5,.6,.75,.87,.9),
+      )) %>%
       exp() %>%
       round(0)
     tibble(Quantile=c('D10','D25','D30','D50','D60','D75','D84','D90'),
            `Particle Size (µm)`= ifelse(is.na(interp_out),
                                         paste0('>',max(sieveMesh()$`Screen Size (µm)`)),
                                         interp_out)
-                                        )
+    )
   })
   #4. Calculate Coefficient of Uniformity
   output$coeffs<-renderTable({
@@ -158,7 +163,7 @@ server <- function(input, output) {
                    'Coefficient of Curve\n(D30^2/D10/D60)'),
            Value=c(interp_out[3]/interp_out[1],
                    interp_out[2]^2/interp_out[1]/interp_out[3])
-      )
+    )
   })
   
   #4. Plot it up
@@ -169,9 +174,9 @@ server <- function(input, output) {
     reverselog_trans <- function(base = exp(1)) {
       trans <- function(x) -log(x, base)
       inv <- function(x) base^(-x)
-      scales::trans_new(paste0("reverselog-", format(base)), trans, inv, 
-                scales::log_breaks(base = base), 
-                domain = c(1e-100, Inf))
+      scales::trans_new(paste0("reverselog-", format(base)), trans, inv,
+                        scales::log_breaks(base = base),
+                        domain = c(1e-100, Inf))
     }
     
     ggplot(sieveMesh(),aes(`Screen Size (µm)`,`% Passing`))+
@@ -188,18 +193,22 @@ server <- function(input, output) {
       scale_y_continuous('% Passing',labels=scales::percent,limits=c(0,1))+
       scale_x_continuous(limits=c(10^4,1),
                          breaks=c(1,10,100,1000,10^4),
-                       minor_breaks=breaks_minor,
-                       trans=reverselog_trans(10))+
+                         minor_breaks=breaks_minor,
+                         trans=reverselog_trans(10))+
       geom_label(data=tibble(`% Passing`=.5, `Screen Size (µm)`=#68
                                sieveMesh() %>%
-                   arrange(`% Passing`) %>%
-                   with(.,signal::interp1(x=`% Passing`,
-                                          y=log(`Screen Size (µm)`),
-                                          xi=c(.5))) %>% exp()
-                   ),aes(label=paste0('D50: ',round(`Screen Size (µm)`),' µm')))
-  })
+                               arrange(`% Passing`) %>%
+                               with(.,signal::interp1(x=`% Passing`,
+                                                      y=log(`Screen Size (µm)`),
+                                                      xi=c(.5))) %>% exp()
+      ),aes(label=paste0('D50: ',round(`Screen Size (µm)`),' µm')),
+      alpha=.75)+
+       annotate('text',y=0,x=c(5000,400,15,1),label=c('pebble','sand','silt','clay'))
+      # coord_cartesian(clip='off')+
+  },
+  res=72*1.5)
   
 }
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
